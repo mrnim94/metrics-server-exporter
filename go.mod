@@ -10,7 +10,7 @@ require (
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/sirupsen/logrus v1.9.0
 	k8s.io/apimachinery v0.27.1
-	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/client-go v0.27.1
 	k8s.io/metrics v0.27.1
 )
 
