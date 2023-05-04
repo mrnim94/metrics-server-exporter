@@ -14,12 +14,19 @@ import (
 )
 
 func init() {
-	os.Setenv("APP_NAME", "XXXX")
+	os.Setenv("APP_NAME", "metrics-server-exporter")
 	log.InitLogger(false)
 	os.Setenv("TZ", "Asia/Ho_Chi_Minh")
 }
 
 func main() {
+	namespace, ok := os.LookupEnv("LOOK_NAMESPACE")
+	if !ok {
+		os.Setenv("LOOK_NAMESPACE", "argocd")
+	} else {
+		log.Info("Get metrics belong to namespace such as ", namespace)
+	}
+
 	kubeconfig := flag.String("kubeconfig", ".kube/config", "location to your confighihi file")
 	kube := &kubernetes_impl.KubeConfiguration{KubeConfig: *kubeconfig}
 
@@ -41,5 +48,5 @@ func main() {
 		UsageResourcesHandler: usageResourcesHandler,
 	}
 	api.SetupRouter()
-	e.Logger.Fatal(e.Start(":1323"))
+	e.Logger.Fatal(e.Start(":1994"))
 }

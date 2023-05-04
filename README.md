@@ -1,2 +1,3 @@
-https://grafana.com/grafana/dashboards/8760-pods-metrics-server-monitor-prometheus/   
-https://github.com/AdrianBalcan/metrics-server-monitor-prometheus
+https://nimtechnology.com/2022/02/01/golang-chuan-bi-1-project-golang/
+
+Log: https://github.com/thanhniencung/backend-github-trending/blob/master/log/log.go

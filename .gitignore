@@ -1,3 +1,4 @@
 .kube/config
 log_files/error/*
 log_files/info/*
+.idea
