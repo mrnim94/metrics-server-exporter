@@ -7,7 +7,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: List files in path
-        run: ls -la .
+        run: |
+          pwd
+          ls -la .
       - name: Depcheck
         uses: dependency-check/Dependency-Check_Action@main
         id: Depcheck
