@@ -68,6 +68,12 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
+envVars: {}
+  # CONSUMER_GROUP_ID: request_handler-qa
+  # DEFAULT_TIMEOUT_SECONDS: "40"
+  # DEFAULT_TIMEOUT_GAP: "300"
+  # DEFAULT_LOGGING_TIMEOUT: "360"
+
 autoscaling:
   enabled: false
   minReplicas: 1
