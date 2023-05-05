@@ -46,3 +46,10 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/metrics-server-exporter:latest, ${{ secrets.DOCKER_HUB_USERNAME }}/metrics-server-exporter:${{ env.RELEASE_VERSION }}
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ secrets.DOCKER_HUB_USERNAME }}/metrics-server-exporter:${{ env.RELEASE_VERSION }}
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
