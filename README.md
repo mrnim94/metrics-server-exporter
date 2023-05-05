@@ -19,7 +19,7 @@ helm repo add openvscode-server-helm https://mrnim94.github.io/metrics-server-ex
 
 helm search repo metrics-server-exporter
 NAME                                            CHART VERSION   APP VERSION     DESCRIPTION
-metrics-server-exporter/metrics-server-exporter 0.1.1           0.0.1           A Helm chart for Kubernetes
+metrics-server-exporter/metrics-server-exporter 0.1.2           0.0.1           A Helm chart for Kubernetes
 ```
 ### Importance
 
