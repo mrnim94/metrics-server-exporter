@@ -22,6 +22,14 @@ NAME                                            CHART VERSION   APP VERSION     
 metrics-server-exporter/metrics-server-exporter 0.1.2           0.0.1           A Helm chart for Kubernetes
 ```
 ### Importance
+Currently, the metrics-server-exporter won't collect all pods metrics in your k8s. It will only collect metrics following the namespace that you specify.  
+
+#### VALUES FILES
+```
+#values.yaml
+envVars:
+  LOOK_NAMESPACE: <namespace>
+```
 
 ### Refer to:  
 
