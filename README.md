@@ -16,3 +16,10 @@ To the metrics-server-exporter, you need prepare something:
 
  - [Pods - Metrics Server Monitor Prometheus](https://grafana.com/grafana/dashboards/8760-pods-metrics-server-monitor-prometheus/)
  - [metrics-server-monitor-prometheus](https://github.com/AdrianBalcan/metrics-server-monitor-prometheus)
+
+#### Create Helm Package
+
+```sh
+helm package ./helm-chart/* --destination ./helm-chart/
+helm repo index . --url https://mrnim94.github.io/metrics-server-exporter/helm-chart
+```
