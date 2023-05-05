@@ -3,22 +3,22 @@ entries:
   metrics-server-exporter:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2023-05-05T08:00:49.996219057Z"
+    created: "2023-05-05T08:02:37.026451618Z"
     description: A Helm chart for Kubernetes
     digest: b023639045c0d318d6eef41879ebc82778863be1f16c7f4d1782e1898b86887f
     name: metrics-server-exporter
     type: application
     urls:
-    - https://mrnim94.github.io/metrics-server-exporter/helm-chart/helm-chart/metrics-server-exporter-0.1.1.tgz
+    - https://mrnim94.github.io/metrics-server-exporter/helm-chart/metrics-server-exporter-0.1.1.tgz
     version: 0.1.1
   - apiVersion: v2
     appVersion: 0.0.2
-    created: "2023-05-05T08:00:49.995357809Z"
+    created: "2023-05-05T08:02:37.025795579Z"
     description: A Helm chart for Kubernetes
     digest: 698e8ab6c35c48cb77ff8b4d166b839ab2584fb1e309704cd5661c19519069f9
     name: metrics-server-exporter
     type: application
     urls:
-    - https://mrnim94.github.io/metrics-server-exporter/helm-chart/helm-chart/metrics-server-exporter-0.1.0.tgz
+    - https://mrnim94.github.io/metrics-server-exporter/helm-chart/metrics-server-exporter-0.1.0.tgz
     version: 0.1.0
-generated: "2023-05-05T08:00:49.994231027Z"
+generated: "2023-05-05T08:02:37.024793464Z"
