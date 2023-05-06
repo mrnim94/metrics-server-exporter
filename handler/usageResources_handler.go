@@ -12,10 +12,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 type UsageResourcesHandler struct {
-	Echo       *echo.Context
 	Kubernetes kubernetes.Kubernetes
 }
 
@@ -45,14 +45,20 @@ func (ur *UsageResourcesHandler) NewMetrics(reg prometheus.Registerer) {
 			resultPodMetricsList, err := ur.HandlerMetricsPodUsage()
 			if err != nil {
 				log.Error(err.Error())
+				continue
 			}
 			for _, podMetrics := range resultPodMetricsList.Items {
 				for _, container := range podMetrics.Containers {
 					cpuMillicores, err := convertNanocoresToMillicores(container.Usage.Cpu().String())
 					if err != nil {
 						log.Error(err.Error())
+						continue
 					}
-					memoryMebibytes, _ := convertKibibytesToMebibytes(container.Usage.Memory().String())
+					memoryMebibytes, err := convertKibibytesToMebibytes(container.Usage.Memory().String())
+					if err != nil {
+						log.Error(err.Error())
+						continue
+					}
 					m.podsCpu.With(prometheus.Labels{"namespace": podMetrics.Namespace, "pod": podMetrics.Name, "container": container.Name}).Set(cpuMillicores)
 					m.podsMemory.With(prometheus.Labels{"namespace": podMetrics.Namespace, "pod": podMetrics.Name, "container": container.Name}).Set(memoryMebibytes)
 				}
@@ -85,26 +91,25 @@ func (ur *UsageResourcesHandler) HandlerPodUsage(c echo.Context) error {
 }
 
 func convertNanocoresToMillicores(coreStr string) (float64, error) {
-	var divisor float64
-	var suffix string
+	divisor := map[string]float64{
+		"n": 1000000.0,
+		"m": 1.0,
+	}
 
-	if strings.HasSuffix(coreStr, "n") {
-		divisor = 1000000.0
-		suffix = "n"
-	} else if strings.HasSuffix(coreStr, "m") {
-		divisor = 1.0
-		suffix = "m"
-	} else {
-		iErr := errors.New(" invalid core string format: " + coreStr)
-		log.Error(iErr)
-		return 0, iErr
-	}
+	suffix := strings.TrimLeftFunc(coreStr, unicode.IsDigit)
 	coreStr = strings.TrimSuffix(coreStr, suffix)
-	cores, err := strconv.ParseInt(coreStr, 10, 64)
-	if err != nil {
-		return 0, err
+
+	if divisorVal, ok := divisor[suffix]; ok {
+		cores, err := strconv.ParseInt(coreStr, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return float64(cores) / divisorVal, nil
 	}
-	return float64(cores) / divisor, nil
+
+	iErr := errors.New("invalid core string format: " + coreStr)
+	log.Error(iErr)
+	return 0, iErr
 }
 
 // refer ==> https://medium.com/swlh/understanding-kubernetes-resource-cpu-and-memory-units-30284b3cc866
