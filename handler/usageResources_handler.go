@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
@@ -103,14 +102,14 @@ func convertNanocoresToMillicores(coreStr string) (float64, error) {
 	if divisorVal, ok := divisor[suffix]; ok {
 		cores, err := strconv.ParseInt(coreStr, 10, 64)
 		if err != nil {
+			log.Error(err)
 			return 0, err
 		}
 		return float64(cores) / divisorVal, nil
 	}
 
-	iErr := errors.New("invalid core string format: " + coreStr)
-	log.Error(iErr)
-	return 0, iErr
+	log.Info("invalid core string format: " + coreStr)
+	return 0, nil
 }
 
 // refer ==> https://medium.com/swlh/understanding-kubernetes-resource-cpu-and-memory-units-30284b3cc866
