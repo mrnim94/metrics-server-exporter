@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
@@ -28,12 +29,12 @@ func (ur *UsageResourcesHandler) NewMetrics(reg prometheus.Registerer) {
 		podsCpu: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "metrics_server",
 			Name:      "pod_cpu_usage",
-			Help:      "Metrics server pod cpu utilization",
+			Help:      "Metrics server pod cpu utilization (m or Millicore)",
 		}, []string{"namespace", "pod", "container"}),
 		podsMemory: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "metrics_server",
 			Name:      "pod_memory_usage",
-			Help:      "Metrics server pod memory utilization",
+			Help:      "Metrics server pod memory utilization (Mi or Mebibyte)",
 		}, []string{"namespace", "pod", "container"}),
 	}
 	reg.MustRegister(m.podsCpu)
@@ -51,12 +52,12 @@ func (ur *UsageResourcesHandler) NewMetrics(reg prometheus.Registerer) {
 				for _, container := range podMetrics.Containers {
 					cpuMillicores, err := convertNanocoresToMillicores(container.Usage.Cpu().String())
 					if err != nil {
-						log.Error(err.Error())
+						log.Error(podMetrics.Name + "," + container.Name + " " + err.Error())
 						continue
 					}
 					memoryMebibytes, err := convertKibibytesToMebibytes(container.Usage.Memory().String())
 					if err != nil {
-						log.Error(err.Error())
+						log.Error(podMetrics.Name + "," + container.Name + " " + err.Error())
 						continue
 					}
 					m.podsCpu.With(prometheus.Labels{"namespace": podMetrics.Namespace, "pod": podMetrics.Name, "container": container.Name}).Set(cpuMillicores)
@@ -113,11 +114,25 @@ func convertNanocoresToMillicores(coreStr string) (float64, error) {
 }
 
 // refer ==> https://medium.com/swlh/understanding-kubernetes-resource-cpu-and-memory-units-30284b3cc866
-func convertKibibytesToMebibytes(kibibytesStr string) (float64, error) {
-	kibibytes, err := strconv.Atoi(strings.TrimSuffix(kibibytesStr, "Ki"))
-	if err != nil {
-		return 0, err
+func convertKibibytesToMebibytes(inputStr string) (float64, error) {
+	var value int
+	var err error
+
+	if strings.HasSuffix(inputStr, "Ki") {
+		value, err = strconv.Atoi(strings.TrimSuffix(inputStr, "Ki"))
+		if err != nil {
+			return 0, err
+		}
+	} else if strings.HasSuffix(inputStr, "Mi") {
+		value, err = strconv.Atoi(strings.TrimSuffix(inputStr, "Mi"))
+		if err != nil {
+			return 0, err
+		}
+		value = value * 1024 // Convert mebibytes to kibibytes
+	} else {
+		return 0, fmt.Errorf("invalid suffix: expected 'Ki' or 'Mi'")
 	}
-	mebibytes := float64(kibibytes) / 1024
+
+	mebibytes := float64(value) / 1024
 	return mebibytes, nil
 }
