@@ -59,15 +59,15 @@ func (ur *UsageResourcesHandler) NewMetrics(reg prometheus.Registerer) {
 						log.Error(podMetrics.Name + "," + container.Name + " " + err.Error())
 						continue
 					}
-					//to clear all the previously set metrics before setting new values
-					m.podsCpu.Reset()
-					m.podsMemory.Reset()
 
 					m.podsCpu.With(prometheus.Labels{"namespace": podMetrics.Namespace, "pod": podMetrics.Name, "container": container.Name}).Set(cpuMillicores)
 					m.podsMemory.With(prometheus.Labels{"namespace": podMetrics.Namespace, "pod": podMetrics.Name, "container": container.Name}).Set(memoryMebibytes)
 				}
 			}
 			time.Sleep(30 * time.Second)
+			//to clear all the previously set metrics before setting new values
+			m.podsCpu.Reset()
+			m.podsMemory.Reset()
 		}
 	}()
 
