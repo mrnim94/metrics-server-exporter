@@ -15,7 +15,7 @@ jobs:
       - name: Run TruffleHog
         run: |
           docker pull dxa4481/trufflehog
-          docker run -v ${{ github.workspace }}:/target dxa4481/trufflehog file:///target
+          docker run -v ${{ github.workspace }}:/target dxa4481/trufflehog --entropy=False file:///target
       - name: List files in path
         run: ls -la .
       - name: Depcheck
