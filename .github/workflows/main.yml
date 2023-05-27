@@ -12,6 +12,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Run TruffleHog
+        run: |
+          docker pull dxa4481/trufflehog
+          docker run -v ${{ github.workspace }}:/target dxa4481/trufflehog file:///target
       - name: List files in path
         run: ls -la .
       - name: Depcheck
