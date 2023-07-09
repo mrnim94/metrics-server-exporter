@@ -7,7 +7,7 @@ require (
 	github.com/labstack/gommon v0.4.0
 	github.com/mrnim94/file-rotatelogs v2.4.0+incompatible
 	github.com/prometheus/client_golang v1.16.0
-	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
+	github.com/rifflock/lfshook/v2 v2.4
 	github.com/sirupsen/logrus v1.9.3
 	k8s.io/apimachinery v0.27.3
 	k8s.io/client-go v0.27.3
