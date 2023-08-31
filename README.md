@@ -41,7 +41,7 @@ Name | Description | Type | Labels
 `metrics_server_pod_memory_usage` | Metrics server pod memory utilization (Mi or Mebibyte) | gauge | `container`
 
 ### Grafana Daskboard
-- Get [Grafana Json](https://raw.githubusercontent.com/mrnim94/metrics-server-exporter/master/grafana/Pods%20-%20Metrics%20Server%20Monitor%20Prometheus-1688617368230.json)
+- Get [Grafana Json](https://grafana.com/grafana/dashboards/19451-pods-metrics-server-monitor-prometheus/)
 
 
 ### Refer to:  
