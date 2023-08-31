@@ -53,5 +53,5 @@ Name | Description | Type | Labels
 
 ```sh
 helm package ./helm-chart/metrics-server-exporter --destination ./helm-chart/
-helm repo index . --url https://mrnim94.github.io/metrics-server-exporter
+helm repo index . --url  https://nimtechnology.github.io/metrics-server-exporter
 ```
