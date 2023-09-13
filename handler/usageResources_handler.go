@@ -75,17 +75,31 @@ func (ur *UsageResourcesHandler) NewMetrics(reg prometheus.Registerer) {
 
 func (ur *UsageResourcesHandler) HandlerMetricsPodUsage() (*v1beta1.PodMetricsList, error) {
 
-	podMetricsList, err := ur.Kubernetes.MetricsServerPodUsage(os.Getenv("LOOK_NAMESPACE"))
-	if err != nil {
-		log.Error(err.Error())
-		return nil, err
+	if !strings.Contains(os.Getenv("LOOK_NAMESPACES"), ",") {
+		podMetricsList, err := ur.Kubernetes.MetricsServerPodUsage(os.Getenv("LOOK_NAMESPACES"))
+		if err != nil {
+			log.Error(err.Error())
+			return nil, err
+		}
+		return podMetricsList, nil
+	} else {
+		allPodMetricsLists := &v1beta1.PodMetricsList{}
+		namespaces := strings.Split(os.Getenv("LOOK_NAMESPACES"), ",")
+		for _, namespace := range namespaces {
+			podMetricsList, err := ur.Kubernetes.MetricsServerPodUsage(namespace)
+			if err != nil {
+				log.Error(err.Error())
+				return nil, err
+			}
+			allPodMetricsLists.Items = append(allPodMetricsLists.Items, podMetricsList.Items...)
+		}
+		return allPodMetricsLists, nil
 	}
-	return podMetricsList, nil
+	return nil, nil
 }
 
 // HandlerPodUsage /*** call API
 func (ur *UsageResourcesHandler) HandlerPodUsage(c echo.Context) error {
-
 	podMetricsList, err := ur.Kubernetes.MetricsServerPodUsage("LOOK_NAMESPACE")
 	if err != nil {
 		log.Error(err.Error())
