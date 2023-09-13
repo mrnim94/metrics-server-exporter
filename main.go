@@ -20,11 +20,11 @@ func init() {
 }
 
 func main() {
-	namespace, ok := os.LookupEnv("LOOK_NAMESPACE")
+	namespaces, ok := os.LookupEnv("LOOK_NAMESPACES")
 	if !ok {
-		os.Setenv("LOOK_NAMESPACE", "argocd")
+		os.Setenv("LOOK_NAMESPACES", "")
 	} else {
-		log.Info("Get metrics belong to namespace such as ", namespace)
+		log.Info("Get metrics belong to namespace such as ", namespaces)
 	}
 
 	kubeconfig := flag.String("kubeconfig", ".kube/config", "location to your confighihi file")
