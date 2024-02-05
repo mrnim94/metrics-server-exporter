@@ -8,6 +8,15 @@ import (
 	"metrics-server-exporter/log"
 )
 
+/*
+**
+This function based on:
+> kubectl top pod -n mdaas-engines-prod
+NAME                                             CPU(cores)   MEMORY(bytes)
+doctor-doom-fb5fd5f94-mwc6g                      0m           166Mi
+eks-sample-windows-deployment-5c8c7d6c9c-4frkp   0m           104Mi
+eng-7z-7766964875-4mplq                          13m          226Mi
+*/
 func (kc *KubeConfiguration) MetricsServerPodUsage(namespace string) (*v1beta1.PodMetricsList, error) {
 
 	config, err := kc.accessKubernetes()
