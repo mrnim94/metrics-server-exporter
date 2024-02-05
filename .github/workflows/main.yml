@@ -64,7 +64,6 @@ jobs:
           format: 'table'
           exit-code: '1'
           severity: 'CRITICAL'
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
+      - uses: dominikh/staticcheck-action@latest
         with:
-          args: ./...
+        version: "2023.1.6"
