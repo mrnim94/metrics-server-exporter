@@ -29,12 +29,12 @@ func (ur *UsageResourcesHandler) NewMetrics(reg prometheus.Registerer) {
 			Namespace: "metrics_server",
 			Name:      "pod_cpu_usage",
 			Help:      "Metrics server pod cpu utilization (m or Millicore)",
-		}, []string{"namespace", "pod", "container"}),
+		}, []string{"namespace", "kind_owner", "name_owner", "pod", "container", "os"}),
 		podsMemory: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "metrics_server",
 			Name:      "pod_memory_usage",
 			Help:      "Metrics server pod memory utilization (Mi or Mebibyte)",
-		}, []string{"namespace", "pod", "container"}),
+		}, []string{"namespace", "kind_owner", "name_owner", "pod", "container", "os"}),
 	}
 	reg.MustRegister(m.podsCpu)
 	reg.MustRegister(m.podsMemory)
@@ -60,8 +60,30 @@ func (ur *UsageResourcesHandler) NewMetrics(reg prometheus.Registerer) {
 						continue
 					}
 
-					m.podsCpu.With(prometheus.Labels{"namespace": podMetrics.Namespace, "pod": podMetrics.Name, "container": container.Name}).Set(cpuMillicores)
-					m.podsMemory.With(prometheus.Labels{"namespace": podMetrics.Namespace, "pod": podMetrics.Name, "container": container.Name}).Set(memoryMebibytes)
+					osType, err := ur.Kubernetes.DetectPodOs(podMetrics.Namespace, podMetrics.Name)
+					if err != nil {
+						log.Error(err.Error())
+					}
+
+					kindOwner, nameOwner, err := ur.Kubernetes.GetPodOwner(podMetrics.Namespace, podMetrics.Name)
+					if err != nil {
+						log.Error(err.Error())
+					}
+
+					m.podsCpu.With(prometheus.Labels{
+						"namespace":  podMetrics.Namespace,
+						"kind_owner": kindOwner,
+						"name_owner": nameOwner,
+						"pod":        podMetrics.Name,
+						"container":  container.Name,
+						"os":         osType}).Set(cpuMillicores)
+					m.podsMemory.With(prometheus.Labels{
+						"namespace":  podMetrics.Namespace,
+						"kind_owner": kindOwner,
+						"name_owner": nameOwner,
+						"pod":        podMetrics.Name,
+						"container":  container.Name,
+						"os":         osType}).Set(memoryMebibytes)
 				}
 			}
 			time.Sleep(30 * time.Second)
@@ -126,7 +148,7 @@ func convertNanocoresToMillicores(coreStr string) (float64, error) {
 		return float64(cores) / divisorVal, nil
 	}
 
-	log.Info("invalid core string format: " + coreStr)
+	log.Debug("invalid core string format: " + coreStr)
 	return 0, nil
 }
 
