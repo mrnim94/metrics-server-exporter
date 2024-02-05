@@ -20,6 +20,10 @@ eng-7z-7766964875-4mplq                          13m          226Mi
 func (kc *KubeConfiguration) MetricsServerPodUsage(namespace string) (*v1beta1.PodMetricsList, error) {
 
 	config, err := kc.accessKubernetes()
+	if err != nil {
+		log.Error(err.Error())
+		return nil, err
+	}
 	metricsClientset, err := metricsv.NewForConfig(config)
 	if err != nil {
 		log.Error(err.Error())
