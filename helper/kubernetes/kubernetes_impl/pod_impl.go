@@ -5,7 +5,6 @@ import (
 	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	"metrics-server-exporter/log"
 )
 
@@ -38,7 +37,7 @@ func (kc *KubeConfiguration) DetectPodOs(namespace, podName string) (string, err
 // Function to get the owner (Deployment, StatefulSet, DaemonSet) based on Pod name and namespace
 func (kc *KubeConfiguration) GetPodOwner(namespace, podName string) (ownerKind, ownerName string, err error) {
 	// Load kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", clientcmd.RecommendedHomeFile)
+	config, err := kc.accessKubernetes()
 	if err != nil {
 		log.Error(err)
 		return "", "", err
