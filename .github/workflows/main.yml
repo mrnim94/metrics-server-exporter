@@ -67,4 +67,4 @@ jobs:
       - name: Staticcheck is a state of the art linter for the Go programming language
         uses: dominikh/staticcheck-action@v1.3.0
         with:
-          version: "2022.1.3"
+          version: "2023.1.6"
