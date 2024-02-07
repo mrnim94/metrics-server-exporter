@@ -1,4 +1,4 @@
-  # Metrics Server Exporter
+# Metrics Server Exporter
 
 The metrics server exporter is solution to help you monitor RAM/CPU easily.  
 You can monitor RAM/CPU of the windows container via the metrics server exporter
@@ -50,6 +50,13 @@ Name | Description | Type | Labels
 
  - [Pods - Metrics Server Monitor Prometheus](https://grafana.com/grafana/dashboards/8760-pods-metrics-server-monitor-prometheus/)
  - [metrics-server-monitor-prometheus](https://github.com/AdrianBalcan/metrics-server-monitor-prometheus)
+
+### Default to enable Auto Discovery Metrics
+We are configured `prometheus.io/scrape: "true"` in Service template.   
+Maybe your Promethues will be automatic to get metrics and you don't need to configure anything.
+
+
+
 
 #### Create Helm Package
 
