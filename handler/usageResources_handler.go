@@ -7,6 +7,7 @@ import (
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	"metrics-server-exporter/helper/kubernetes"
 	"metrics-server-exporter/log"
+	"metrics-server-exporter/model"
 	"net/http"
 	"os"
 	"strconv"
@@ -20,7 +21,7 @@ type UsageResourcesHandler struct {
 }
 
 type metrics struct {
-	podsCpu, podsMemory *prometheus.GaugeVec
+	podsCpu, podsMemory, hpaUtilization *prometheus.GaugeVec
 }
 
 func (ur *UsageResourcesHandler) NewMetrics(reg prometheus.Registerer) {
@@ -35,13 +36,19 @@ func (ur *UsageResourcesHandler) NewMetrics(reg prometheus.Registerer) {
 			Name:      "pod_memory_usage",
 			Help:      "Metrics server pod memory utilization (Mi or Mebibyte)",
 		}, []string{"namespace", "kind_owner", "name_owner", "pod", "container", "os"}),
+		hpaUtilization: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: "metrics_server",
+			Name:      "hpa_utilization",
+			Help:      "Current Average Utilization Percentage of each metric that is created by HPA (%)",
+		}, []string{"metric_name", "metric_type", "hpa_owner", "scale_target_ref_kind", "scale_target_ref_name"}),
 	}
 	reg.MustRegister(m.podsCpu)
 	reg.MustRegister(m.podsMemory)
+	reg.MustRegister(m.hpaUtilization)
 
 	go func() {
 		for {
-			// set Metrics
+			// set Metrics RAM, CPU
 			resultPodMetricsList, err := ur.HandlerMetricsPodUsage()
 			if err != nil {
 				log.Error(err.Error())
@@ -86,13 +93,54 @@ func (ur *UsageResourcesHandler) NewMetrics(reg prometheus.Registerer) {
 						"os":         osType}).Set(memoryMebibytes)
 				}
 			}
+
+			// Set Metrics HPA
+			resultMetricsHPAs, err := ur.HandlerMetricsHPAs()
+			if err != nil {
+				log.Error(err.Error())
+				continue
+			}
+			for _, resultMetricsHPA := range resultMetricsHPAs {
+				m.hpaUtilization.With(prometheus.Labels{
+					"metric_name":           resultMetricsHPA.MetricName,
+					"metric_type":           resultMetricsHPA.MetricType,
+					"hpa_owner":             resultMetricsHPA.HPAOwner,
+					"scale_target_ref_kind": resultMetricsHPA.ScaleTargetRefKind,
+					"scale_target_ref_name": resultMetricsHPA.ScaleTargetRefName}).Set(resultMetricsHPA.AverageUtilization)
+			}
+
 			time.Sleep(30 * time.Second)
 			//to clear all the previously set metrics before setting new values
+			m.hpaUtilization.Reset()
 			m.podsCpu.Reset()
 			m.podsMemory.Reset()
 		}
 	}()
 
+}
+
+func (ur *UsageResourcesHandler) HandlerMetricsHPAs() (model.HPAUtilizations, error) {
+	if !strings.Contains(os.Getenv("LOOK_NAMESPACES"), ",") {
+		hpaResults, err := ur.Kubernetes.CurrentMetricsForHPAs(os.Getenv("LOOK_NAMESPACES"))
+		if err != nil {
+			log.Error(err.Error())
+			return nil, err
+		}
+		return hpaResults, nil
+	} else {
+		allMetricsHPAs := model.HPAUtilizations{}
+		namespaces := strings.Split(os.Getenv("LOOK_NAMESPACES"), ",")
+		for _, namespace := range namespaces {
+			hpaResults, err := ur.Kubernetes.CurrentMetricsForHPAs(namespace)
+			if err != nil {
+				log.Error(err.Error())
+				return allMetricsHPAs, err
+			}
+			allMetricsHPAs = append(hpaResults, allMetricsHPAs...)
+		}
+		return allMetricsHPAs, nil
+	}
+	return nil, nil
 }
 
 func (ur *UsageResourcesHandler) HandlerMetricsPodUsage() (*v1beta1.PodMetricsList, error) {
