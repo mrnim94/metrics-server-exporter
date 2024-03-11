@@ -3,6 +3,12 @@ kind: ClusterRole
 metadata:
   name: {{ include "metrics-server-exporter.fullname" . }}
 rules:
-- apiGroups: ["metrics.k8s.io"]
-  resources: ["pods"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get"]
+  - apiGroups: ["apps"]  # 'apps' is the API group for ReplicaSets
+    resources: ["replicasets"]
+    verbs: ["get"]
