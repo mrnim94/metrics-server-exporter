@@ -12,3 +12,6 @@ rules:
   - apiGroups: ["apps"]  # 'apps' is the API group for ReplicaSets
     resources: ["replicasets"]
     verbs: ["get"]
+  - apiGroups: [ "autoscaling" ]
+    resources: [ "horizontalpodautoscalers" ]
+    verbs: [ "list", "get" ]
