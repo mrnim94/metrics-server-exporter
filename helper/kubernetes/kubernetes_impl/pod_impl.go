@@ -35,7 +35,7 @@ func (kc *KubeConfiguration) DetectPodOs(namespace, podName string) (string, err
 }
 
 // Function to get the owner (Deployment, StatefulSet, DaemonSet) based on Pod name and namespace
-func (kc *KubeConfiguration) GetPodOwner(namespace, podName string) (ownerKind, ownerName string, err error) {
+func (kc *KubeConfiguration) GetPodOwner(namespace, podName string) (ownerKind, ownerName string, err error) { //NOSONAR - Refactor this method to reduce its Cognitive Complexity
 	// Load kubeconfig
 	config, err := kc.accessKubernetes()
 	if err != nil {

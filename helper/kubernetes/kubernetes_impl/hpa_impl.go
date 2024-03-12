@@ -9,7 +9,7 @@ import (
 	"metrics-server-exporter/model"
 )
 
-func (kc *KubeConfiguration) CurrentMetricsForHPAs(namespace string) (model.HPAUtilizations, error) {
+func (kc *KubeConfiguration) CurrentMetricsForHPAs(namespace string) (model.HPAUtilizations, error) { //NOSONAR - Refactor this method to reduce its Cognitive Complexity
 
 	results := model.HPAUtilizations{}
 
