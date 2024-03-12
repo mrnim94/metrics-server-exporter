@@ -4,7 +4,7 @@ metadata:
   name: {{ include "metrics-server-exporter.fullname" . }}
   labels:
     {{- include "metrics-server-exporter.labels" . | nindent 4 }}
-spec: # NOSONAR
+spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
@@ -19,7 +19,7 @@ spec: # NOSONAR
       {{- end }}
       labels:
         {{- include "metrics-server-exporter.selectorLabels" . | nindent 8 }}
-    spec:
+    spec: # //NOSONAR
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -28,7 +28,7 @@ spec: # NOSONAR
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }} # NOSONAR
+        - name: {{ .Chart.Name }} # //NOSONAR
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
