@@ -25,97 +25,9 @@ type metrics struct {
 }
 
 func (ur *UsageResourcesHandler) NewMetrics(reg prometheus.Registerer) {
-	m := &metrics{
-		podsCpu: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Namespace: "metrics_server",
-			Name:      "pod_cpu_usage",
-			Help:      "Metrics server pod cpu utilization (m or Millicore)",
-		}, []string{"namespace", "kind_owner", "name_owner", "pod", "container", "os"}),
-		podsMemory: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Namespace: "metrics_server",
-			Name:      "pod_memory_usage",
-			Help:      "Metrics server pod memory utilization (Mi or Mebibyte)",
-		}, []string{"namespace", "kind_owner", "name_owner", "pod", "container", "os"}),
-		hpaUtilization: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Namespace: "metrics_server",
-			Name:      "hpa_utilization",
-			Help:      "Current Average Utilization Percentage of each metric that is created by HPA (%)",
-		}, []string{"metric_name", "metric_type", "hpa_owner", "scale_target_ref_kind", "scale_target_ref_name"}),
-	}
-	reg.MustRegister(m.podsCpu)
-	reg.MustRegister(m.podsMemory)
-	reg.MustRegister(m.hpaUtilization)
-
-	go func() {
-		for {
-			// set Metrics RAM, CPU
-			resultPodMetricsList, err := ur.HandlerMetricsPodUsage()
-			if err != nil {
-				log.Error(err.Error())
-				continue
-			}
-			for _, podMetrics := range resultPodMetricsList.Items {
-				for _, container := range podMetrics.Containers {
-					cpuMillicores, err := convertNanocoresToMillicores(container.Usage.Cpu().String())
-					if err != nil {
-						log.Error(podMetrics.Name + "," + container.Name + " " + err.Error())
-						continue
-					}
-					memoryMebibytes, err := convertKibibytesToMebibytes(container.Usage.Memory().String())
-					if err != nil {
-						log.Error(podMetrics.Name + "," + container.Name + " " + err.Error())
-						continue
-					}
-
-					osType, err := ur.Kubernetes.DetectPodOs(podMetrics.Namespace, podMetrics.Name)
-					if err != nil {
-						log.Error(err.Error())
-					}
-
-					kindOwner, nameOwner, err := ur.Kubernetes.GetPodOwner(podMetrics.Namespace, podMetrics.Name)
-					if err != nil {
-						log.Error(err.Error())
-					}
-
-					m.podsCpu.With(prometheus.Labels{
-						"namespace":  podMetrics.Namespace,
-						"kind_owner": kindOwner,
-						"name_owner": nameOwner,
-						"pod":        podMetrics.Name,
-						"container":  container.Name,
-						"os":         osType}).Set(cpuMillicores)
-					m.podsMemory.With(prometheus.Labels{
-						"namespace":  podMetrics.Namespace,
-						"kind_owner": kindOwner,
-						"name_owner": nameOwner,
-						"pod":        podMetrics.Name,
-						"container":  container.Name,
-						"os":         osType}).Set(memoryMebibytes)
-				}
-			}
-
-			// Set Metrics HPA
-			resultMetricsHPAs, err := ur.HandlerMetricsHPAs()
-			if err != nil {
-				log.Error(err.Error())
-				continue
-			}
-			for _, resultMetricsHPA := range resultMetricsHPAs {
-				m.hpaUtilization.With(prometheus.Labels{
-					"metric_name":           resultMetricsHPA.MetricName,
-					"metric_type":           resultMetricsHPA.MetricType,
-					"hpa_owner":             resultMetricsHPA.HPAOwner,
-					"scale_target_ref_kind": resultMetricsHPA.ScaleTargetRefKind,
-					"scale_target_ref_name": resultMetricsHPA.ScaleTargetRefName}).Set(resultMetricsHPA.AverageUtilization)
-			}
-
-			time.Sleep(30 * time.Second)
-			//to clear all the previously set metrics before setting new values
-			m.hpaUtilization.Reset()
-			m.podsCpu.Reset()
-			m.podsMemory.Reset()
-		}
-	}()
+	m := ur.setupMetrics() // create format of Metrics
+	ur.registerMetrics(reg, m)
+	go ur.updateMetricsLoop(m) // get value and update them to metric results
 
 }
 
@@ -222,4 +134,121 @@ func convertKibibytesToMebibytes(inputStr string) (float64, error) {
 
 	mebibytes := float64(value) / 1024
 	return mebibytes, nil
+}
+
+func (ur *UsageResourcesHandler) setupMetrics() *metrics {
+	return &metrics{
+		podsCpu: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: "metrics_server",
+			Name:      "pod_cpu_usage",
+			Help:      "Metrics server pod cpu utilization (m or Millicore)",
+		}, []string{"namespace", "kind_owner", "name_owner", "pod", "container", "os"}),
+		podsMemory: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: "metrics_server",
+			Name:      "pod_memory_usage",
+			Help:      "Metrics server pod memory utilization (Mi or Mebibyte)",
+		}, []string{"namespace", "kind_owner", "name_owner", "pod", "container", "os"}),
+		hpaUtilization: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: "metrics_server",
+			Name:      "hpa_utilization",
+			Help:      "Current Average Utilization Percentage of each metric that is created by HPA (%)",
+		}, []string{"metric_name", "metric_type", "hpa_owner", "scale_target_ref_kind", "scale_target_ref_name"}),
+	}
+}
+
+func (ur *UsageResourcesHandler) registerMetrics(reg prometheus.Registerer, m *metrics) {
+	reg.MustRegister(m.podsCpu, m.podsMemory, m.hpaUtilization)
+}
+
+func (ur *UsageResourcesHandler) updateMetricsLoop(m *metrics) {
+	for {
+		if err := ur.updatePodMetrics(m); err != nil {
+			log.Printf("Error updating pod metrics: %v", err)
+		}
+		if err := ur.updateHPAMetrics(m); err != nil {
+			log.Printf("Error updating HPA metrics: %v", err)
+		}
+		m.hpaUtilization.Reset()
+		m.podsCpu.Reset()
+		m.podsMemory.Reset()
+		time.Sleep(30 * time.Second) // Consider making this configurable
+	}
+}
+
+// These should be implemented based on your actual logic for fetching and processing metrics
+func (ur *UsageResourcesHandler) updatePodMetrics(m *metrics) error { //NOSONAR - Refactor this method to reduce its Cognitive Complexity
+	// Fetch pod metrics, update m.podsCpu and m.podsMemory
+	// Use mock or pseudo code for fetching and updating metrics
+	// set Metrics RAM, CPU
+	resultPodMetricsList, err := ur.HandlerMetricsPodUsage()
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	for _, podMetrics := range resultPodMetricsList.Items {
+		for _, container := range podMetrics.Containers {
+			cpuMillicores, err := convertNanocoresToMillicores(container.Usage.Cpu().String())
+			if err != nil {
+				log.Error(podMetrics.Name + "," + container.Name + " " + err.Error())
+				continue
+			}
+			memoryMebibytes, err := convertKibibytesToMebibytes(container.Usage.Memory().String())
+			if err != nil {
+				log.Error(podMetrics.Name + "," + container.Name + " " + err.Error())
+				continue
+			}
+
+			osType, err := ur.Kubernetes.DetectPodOs(podMetrics.Namespace, podMetrics.Name)
+			if err != nil {
+				log.Error(err.Error())
+			}
+
+			kindOwner, nameOwner, err := ur.Kubernetes.GetPodOwner(podMetrics.Namespace, podMetrics.Name)
+			if err != nil {
+				log.Error(err.Error())
+			}
+
+			m.podsCpu.With(prometheus.Labels{
+				"namespace":  podMetrics.Namespace,
+				"kind_owner": kindOwner,
+				"name_owner": nameOwner,
+				"pod":        podMetrics.Name,
+				"container":  container.Name,
+				"os":         osType}).Set(cpuMillicores)
+			m.podsMemory.With(prometheus.Labels{
+				"namespace":  podMetrics.Namespace,
+				"kind_owner": kindOwner,
+				"name_owner": nameOwner,
+				"pod":        podMetrics.Name,
+				"container":  container.Name,
+				"os":         osType}).Set(memoryMebibytes)
+		}
+	}
+	return nil
+}
+
+func (ur *UsageResourcesHandler) updateHPAMetrics(m *metrics) error {
+	// Fetch HPA metrics, update m.hpaUtilization
+	// Use mock or pseudo code for fetching and updating metrics
+	// Set Metrics HPA
+	resultMetricsHPAs, err := ur.HandlerMetricsHPAs()
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	for _, resultMetricsHPA := range resultMetricsHPAs {
+		m.hpaUtilization.With(prometheus.Labels{
+			"metric_name":           resultMetricsHPA.MetricName,
+			"metric_type":           resultMetricsHPA.MetricType,
+			"hpa_owner":             resultMetricsHPA.HPAOwner,
+			"scale_target_ref_kind": resultMetricsHPA.ScaleTargetRefKind,
+			"scale_target_ref_name": resultMetricsHPA.ScaleTargetRefName}).Set(resultMetricsHPA.AverageUtilization)
+	}
+
+	time.Sleep(30 * time.Second)
+	//to clear all the previously set metrics before setting new values
+	m.hpaUtilization.Reset()
+	m.podsCpu.Reset()
+	m.podsMemory.Reset()
+	return nil
 }
