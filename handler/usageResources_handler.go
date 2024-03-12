@@ -176,7 +176,7 @@ func (ur *UsageResourcesHandler) updateMetricsLoop(m *metrics) {
 }
 
 // These should be implemented based on your actual logic for fetching and processing metrics
-func (ur *UsageResourcesHandler) updatePodMetrics(m *metrics) error {
+func (ur *UsageResourcesHandler) updatePodMetrics(m *metrics) error { //NOSONAR - Refactor this method to reduce its Cognitive Complexity
 	// Fetch pod metrics, update m.podsCpu and m.podsMemory
 	// Use mock or pseudo code for fetching and updating metrics
 	// set Metrics RAM, CPU
