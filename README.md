@@ -3,6 +3,10 @@
 The metrics server exporter is solution to help you monitor RAM/CPU easily.  
 You can monitor RAM/CPU of the windows container via the metrics server exporter
 
+## Badge
+
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=mrnim94_metrics-server-exporter)](https://sonarcloud.io/summary/new_code?id=mrnim94_metrics-server-exporter)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmrnim94%2Fmetrics-server-exporter.svg?type=large&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmrnim94%2Fmetrics-server-exporter?ref=badge_large&issueType=license)
 
 ## Prequirement
 
