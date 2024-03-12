@@ -17,15 +17,15 @@ func ConvertStringToNumber(input string) (float64, error) {
 		numberPart := strings.TrimSuffix(input, "m")
 		result, err = strconv.ParseFloat(numberPart, 64)
 		if err != nil {
-			return 0, err
 			log.Error(err)
+			return 0, err
 		}
 		result /= 1000 // Convert to milli-unit
 	} else {
 		result, err = strconv.ParseFloat(input, 64)
 		if err != nil {
-			return 0, err
 			log.Error(err)
+			return 0, err
 		}
 	}
 
