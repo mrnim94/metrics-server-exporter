@@ -161,4 +161,8 @@ entries:
     urls:
     - https://mrnim94.github.io/metrics-server-exporter/helm-chart/metrics-server-exporter-0.1.0.tgz
     version: 0.1.0
+<<<<<<< HEAD
 generated: "2024-03-13T17:52:18.90340234Z"
+=======
+generated: "2024-03-12T18:02:35.702716813Z"
+>>>>>>> 98bf48b15b987ad2cd948ef641d4b51124406fa7

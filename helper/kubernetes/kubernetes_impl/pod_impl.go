@@ -23,7 +23,7 @@ func (kc *KubeConfiguration) DetectPodOs(namespace, podName string) (string, err
 	// Get a list of all Pods in all namespaces
 	pod, err := clientset.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
 	if err != nil {
-		log.Error(err)
+		log.Error(err, " in ns: ", namespace)
 		return "", err
 	}
 

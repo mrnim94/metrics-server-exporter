@@ -152,7 +152,7 @@ func (ur *UsageResourcesHandler) setupMetrics() *metrics {
 			Namespace: "metrics_server",
 			Name:      "hpa_utilization",
 			Help:      "Current Average Utilization Percentage of each metric that is created by HPA (%)",
-		}, []string{"metric_name", "metric_type", "hpa_owner", "scale_target_ref_kind", "scale_target_ref_name"}),
+		}, []string{"namespace", "metric_name", "metric_type", "hpa_owner", "scale_target_ref_kind", "scale_target_ref_name"}),
 	}
 }
 
@@ -168,10 +168,11 @@ func (ur *UsageResourcesHandler) updateMetricsLoop(m *metrics) {
 		if err := ur.updateHPAMetrics(m); err != nil {
 			log.Printf("Error updating HPA metrics: %v", err)
 		}
+		time.Sleep(30 * time.Second) // Consider making this configurable
 		m.hpaUtilization.Reset()
 		m.podsCpu.Reset()
 		m.podsMemory.Reset()
-		time.Sleep(30 * time.Second) // Consider making this configurable
+
 	}
 }
 
@@ -238,17 +239,12 @@ func (ur *UsageResourcesHandler) updateHPAMetrics(m *metrics) error {
 	}
 	for _, resultMetricsHPA := range resultMetricsHPAs {
 		m.hpaUtilization.With(prometheus.Labels{
+			"namespace":             resultMetricsHPA.Namespace,
 			"metric_name":           resultMetricsHPA.MetricName,
 			"metric_type":           resultMetricsHPA.MetricType,
 			"hpa_owner":             resultMetricsHPA.HPAOwner,
 			"scale_target_ref_kind": resultMetricsHPA.ScaleTargetRefKind,
 			"scale_target_ref_name": resultMetricsHPA.ScaleTargetRefName}).Set(resultMetricsHPA.AverageUtilization)
 	}
-
-	time.Sleep(30 * time.Second)
-	//to clear all the previously set metrics before setting new values
-	m.hpaUtilization.Reset()
-	m.podsCpu.Reset()
-	m.podsMemory.Reset()
 	return nil
 }

@@ -42,6 +42,7 @@ func (kc *KubeConfiguration) CurrentMetricsForHPAs(namespace string) (model.HPAU
 				log.Debugf("  Resource Metric: %s, Current Average Utilization: %d, Current Average Value: %s",
 					metric.Resource.Name, *metric.Resource.Current.AverageUtilization, metric.Resource.Current.AverageValue.String())
 				results = append(results, model.HPAUtilization{
+					Namespace:          hpa.Namespace,
 					MetricName:         string(metric.Resource.Name),
 					MetricType:         string(metric.Type),
 					HPAOwner:           hpa.Name,
@@ -73,6 +74,7 @@ func (kc *KubeConfiguration) CurrentMetricsForHPAs(namespace string) (model.HPAU
 
 					// Now you can use utilizationPercentage safely
 					results = append(results, model.HPAUtilization{
+						Namespace:          hpa.Namespace,
 						MetricName:         metric.External.Metric.Name,
 						MetricType:         string(metric.Type),
 						HPAOwner:           hpa.Name,
