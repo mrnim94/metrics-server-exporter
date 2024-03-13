@@ -152,7 +152,7 @@ func (ur *UsageResourcesHandler) setupMetrics() *metrics {
 			Namespace: "metrics_server",
 			Name:      "hpa_utilization",
 			Help:      "Current Average Utilization Percentage of each metric that is created by HPA (%)",
-		}, []string{"metric_name", "metric_type", "hpa_owner", "scale_target_ref_kind", "scale_target_ref_name"}),
+		}, []string{"namespace", "metric_name", "metric_type", "hpa_owner", "scale_target_ref_kind", "scale_target_ref_name"}),
 	}
 }
 
@@ -239,6 +239,7 @@ func (ur *UsageResourcesHandler) updateHPAMetrics(m *metrics) error {
 	}
 	for _, resultMetricsHPA := range resultMetricsHPAs {
 		m.hpaUtilization.With(prometheus.Labels{
+			"namespace":             resultMetricsHPA.Namespace,
 			"metric_name":           resultMetricsHPA.MetricName,
 			"metric_type":           resultMetricsHPA.MetricType,
 			"hpa_owner":             resultMetricsHPA.HPAOwner,
