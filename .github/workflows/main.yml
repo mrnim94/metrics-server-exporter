@@ -1,5 +1,6 @@
 name: ci
 on:
+  pull_request:
   push:
     branches:
       - "master"
@@ -18,17 +19,10 @@ jobs:
           docker run -v ${{ github.workspace }}:/target dxa4481/trufflehog --entropy=False file:///target
       - name: List files in path
         run: ls -la .
-      - name: Depcheck
-        uses: dependency-check/Dependency-Check_Action@main
-        id: Depcheck
-        with:
-          project: 'metrics-server-exporter'
-          path: '.'
-          format: 'HTML'
-          out: 'reports' # this is the default, no need to specify unless you wish to override it
-          args: >
-            --failOnCVSS 0
-            --enableRetired
+      - name: 'Qodana Scan'
+        uses: JetBrains/qodana-action@v2023.3
+        env:
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
       - name: Upload Test results
         uses: actions/upload-artifact@master
         with:
