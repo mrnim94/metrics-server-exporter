@@ -2,7 +2,7 @@ module metrics-server-exporter
 
 go 1.22.0
 
-toolchain go1.22.4
+toolchain go1.24.1
 
 require (
 	github.com/labstack/echo/v4 v4.13.3
